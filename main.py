@@ -1,7 +1,5 @@
 import os
-import re
-import time
-import asyncio
+import sys
 import shutil
 from pathlib import Path
 from pyrogram import Client, filters
@@ -11,27 +9,67 @@ from PIL import Image
 import ffmpeg
 import PyPDF2
 
-# --- Configuration from Environment Variables ---
-API_ID = int(os.environ.get("API_ID", 0))
-API_HASH = os.environ.get("API_HASH", "")
-BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
+# --- DEBUG: Print all environment variables (for debugging only) ---
+print("=" * 50)
+print("🔍 Checking Environment Variables:")
+print("=" * 50)
 
-# Fallback for variable name variations
-if not BOT_TOKEN:
-    BOT_TOKEN = os.environ.get("TOKEN", "")
+# Try both naming conventions
+API_ID = os.environ.get("API_ID") or os.environ.get("ID")
+API_HASH = os.environ.get("API_HASH") or os.environ.get("HASH")
+BOT_TOKEN = os.environ.get("BOT_TOKEN") or os.environ.get("TOKEN")
 
-if not API_ID:
-    API_ID = int(os.environ.get("ID", 0))
+# Print what we found (masked for security)
+print(f"✅ API_ID: {'✅ Found' if API_ID else '❌ Missing'}")
+print(f"✅ API_HASH: {'✅ Found' if API_HASH else '❌ Missing'}")
+print(f"✅ BOT_TOKEN: {'✅ Found' if BOT_TOKEN else '❌ Missing'}")
 
-if not API_HASH:
-    API_HASH = os.environ.get("HASH", "")
+if API_ID:
+    print(f"📊 API_ID length: {len(str(API_ID))} characters")
+if API_HASH:
+    print(f"📊 API_HASH length: {len(API_HASH)} characters")
+if BOT_TOKEN:
+    print(f"📊 BOT_TOKEN length: {len(BOT_TOKEN)} characters")
+
+print("=" * 50)
 
 # --- Validate Configuration ---
-if not all([API_ID, API_HASH, BOT_TOKEN]):
-    raise ValueError(
-        "Missing required environment variables.\n"
-        "Make sure you have set: API_ID, API_HASH, BOT_TOKEN (or TOKEN, ID, HASH)"
+missing_vars = []
+if not API_ID:
+    missing_vars.append("API_ID or ID")
+if not API_HASH:
+    missing_vars.append("API_HASH or HASH")
+if not BOT_TOKEN:
+    missing_vars.append("BOT_TOKEN or TOKEN")
+
+if missing_vars:
+    error_msg = (
+        f"\n❌ MISSING ENVIRONMENT VARIABLES:\n"
+        f"   {', '.join(missing_vars)}\n\n"
+        f"📝 How to fix:\n"
+        f"   1. Go to Railway Dashboard → Your Project → Variables\n"
+        f"   2. Add these variables:\n"
+        f"      - API_ID (or ID) = Your numeric API ID\n"
+        f"      - API_HASH (or HASH) = Your API Hash\n"
+        f"      - BOT_TOKEN (or TOKEN) = Your Bot Token\n"
+        f"   3. Click 'Redeploy'\n\n"
+        f"🔗 Get your credentials:\n"
+        f"   - API_ID/HASH: https://my.telegram.org/apps\n"
+        f"   - BOT_TOKEN: @BotFather on Telegram\n"
     )
+    print(error_msg)
+    sys.exit(1)
+
+# Convert API_ID to int
+try:
+    API_ID = int(API_ID)
+    print(f"✅ API_ID converted to int: {API_ID}")
+except ValueError:
+    print(f"❌ API_ID must be a number, got: {API_ID}")
+    sys.exit(1)
+
+print("✅ All environment variables are set correctly!")
+print("=" * 50)
 
 # --- Initialize Bot ---
 app = Client(
@@ -380,6 +418,6 @@ async def file_without_caption(client, message: Message):
 
 if __name__ == "__main__":
     print("🚀 Bot is starting...")
-    print("📊 Bot ID: " + str(app.id) if hasattr(app, 'id') else "Bot is ready")
     print("✨ Bot is ready to convert files!")
+    print("=" * 50)
     app.run()
