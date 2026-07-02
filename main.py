@@ -2,6 +2,7 @@ import os
 import re
 import time
 import asyncio
+import shutil
 from pathlib import Path
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
@@ -15,9 +16,22 @@ API_ID = int(os.environ.get("API_ID", 0))
 API_HASH = os.environ.get("API_HASH", "")
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
 
+# Fallback for variable name variations
+if not BOT_TOKEN:
+    BOT_TOKEN = os.environ.get("TOKEN", "")
+
+if not API_ID:
+    API_ID = int(os.environ.get("ID", 0))
+
+if not API_HASH:
+    API_HASH = os.environ.get("HASH", "")
+
 # --- Validate Configuration ---
 if not all([API_ID, API_HASH, BOT_TOKEN]):
-    raise ValueError("Missing required environment variables: API_ID, API_HASH, BOT_TOKEN")
+    raise ValueError(
+        "Missing required environment variables.\n"
+        "Make sure you have set: API_ID, API_HASH, BOT_TOKEN (or TOKEN, ID, HASH)"
+    )
 
 # --- Initialize Bot ---
 app = Client(
@@ -297,7 +311,6 @@ async def convert_document(file_path, output_format):
             return str(output_path)
         else:
             # For other formats, just copy the file with new extension
-            import shutil
             shutil.copy2(file_path, output_path)
             return str(output_path)
             
@@ -367,6 +380,6 @@ async def file_without_caption(client, message: Message):
 
 if __name__ == "__main__":
     print("🚀 Bot is starting...")
-    print(f"📊 Bot ID: {app.id}")
+    print("📊 Bot ID: " + str(app.id) if hasattr(app, 'id') else "Bot is ready")
     print("✨ Bot is ready to convert files!")
     app.run()
